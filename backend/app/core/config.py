@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://agently_user:agently_password@localhost:5432/agently"
     redis_url: str = "redis://localhost:6379/0"
     openai_api_key: str | None = None
+    openai_model: str = "gpt-4.1-mini"
     jwt_secret_key: str = Field(default="change-me-in-dev")
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 120
@@ -28,4 +29,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

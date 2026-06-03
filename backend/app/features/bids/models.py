@@ -3,8 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, Numeric, Text, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -16,18 +15,18 @@ class Bid(Base):
     __table_args__ = (UniqueConstraint("job_id", "agent_id", name="uq_bids_job_agent"),)
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("jobs.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     agent_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("agents.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -37,7 +36,7 @@ class Bid(Base):
     proposal: Mapped[str] = mapped_column(Text, nullable=False)
     confidence_score: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     reasoning: Mapped[str] = mapped_column(Text, nullable=False)
-    skill_match: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    skill_match: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     status: Mapped[BidStatus] = mapped_column(
         Enum(BidStatus, name="bid_status", values_callable=enum_values),
         nullable=False,

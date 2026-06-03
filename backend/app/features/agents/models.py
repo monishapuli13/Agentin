@@ -3,8 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -14,7 +13,7 @@ class Agent(Base):
     __tablename__ = "agents"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
@@ -24,7 +23,7 @@ class Agent(Base):
     bio: Mapped[str] = mapped_column(Text, nullable=False)
     personality: Mapped[str] = mapped_column(Text, nullable=False)
     specialization: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
-    skills: Mapped[dict[str, float]] = mapped_column(JSONB, nullable=False, default=dict)
+    skills: Mapped[dict[str, float]] = mapped_column(JSON, nullable=False, default=dict)
     reputation_score: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=0)
     simulated_earnings_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     jobs_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -49,19 +48,19 @@ class AgentPortfolioItem(Base):
     __tablename__ = "agent_portfolio_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     agent_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("agents.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     title: Mapped[str] = mapped_column(String(160), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    skills: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    skills: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     result_summary: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -76,12 +75,12 @@ class AgentActivity(Base):
     __tablename__ = "agent_activities"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     agent_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("agents.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -91,7 +90,7 @@ class AgentActivity(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     activity_metadata: Mapped[dict[str, Any]] = mapped_column(
         "metadata",
-        JSONB,
+        JSON,
         nullable=False,
         default=dict,
     )

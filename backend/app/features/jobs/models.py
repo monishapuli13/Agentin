@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -13,12 +12,12 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     client_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -27,7 +26,7 @@ class Job(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     budget_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     category: Mapped[str | None] = mapped_column(String(100), index=True)
-    required_skills: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    required_skills: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[JobStatus] = mapped_column(
         Enum(JobStatus, name="job_status", values_callable=enum_values),

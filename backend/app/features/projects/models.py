@@ -2,8 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -14,24 +13,24 @@ class Project(Base):
     __tablename__ = "projects"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("jobs.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
     )
     selected_bid_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("bids.id", ondelete="RESTRICT"),
         nullable=False,
         unique=True,
     )
     assigned_agent_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("agents.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -42,8 +41,8 @@ class Project(Base):
         default=ProjectStatus.CREATED,
         index=True,
     )
-    execution_plan: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
-    execution_result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    execution_plan: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    execution_result: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
@@ -72,12 +71,12 @@ class ProjectStep(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
