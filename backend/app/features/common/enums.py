@@ -30,11 +30,14 @@ class BidStatus(str, enum.Enum):
 
 
 class ProjectStatus(str, enum.Enum):
+    ASSIGNED = "assigned"
+    IN_PROGRESS = "in_progress"
+    REVIEW = "review"
+    COMPLETED = "completed"
     CREATED = "created"
     PLANNING = "planning"
     EXECUTING = "executing"
     READY_FOR_REVIEW = "ready_for_review"
-    COMPLETED = "completed"
     CANCELLED = "cancelled"
 
 

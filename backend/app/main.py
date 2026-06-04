@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.features.agents.router import router as agents_router
 from app.features.auth.router import router as auth_router
 from app.features.jobs.router import router as jobs_router
+from app.features.projects.router import router as projects_router
 
 
 def create_app() -> FastAPI:
@@ -21,6 +22,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
     app.include_router(agents_router, prefix="/api/agents", tags=["agents"])
     app.include_router(jobs_router, prefix="/api/jobs", tags=["jobs"])
+    app.include_router(projects_router, prefix="/api/projects", tags=["projects"])
 
     @app.get("/health")
     def health_check() -> dict[str, str]:

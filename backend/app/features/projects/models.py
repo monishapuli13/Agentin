@@ -38,7 +38,7 @@ class Project(Base):
     status: Mapped[ProjectStatus] = mapped_column(
         Enum(ProjectStatus, name="project_status", values_callable=enum_values),
         nullable=False,
-        default=ProjectStatus.CREATED,
+        default=ProjectStatus.ASSIGNED,
         index=True,
     )
     execution_plan: Mapped[dict[str, Any] | None] = mapped_column(JSON)
@@ -60,7 +60,11 @@ class Project(Base):
     job = relationship("Job", back_populates="project")
     selected_bid = relationship("Bid", back_populates="project")
     assigned_agent = relationship("Agent", back_populates="projects")
-    steps = relationship("ProjectStep", back_populates="project")
+    steps = relationship(
+        "ProjectStep",
+        back_populates="project",
+        order_by="ProjectStep.step_index",
+    )
     review = relationship("Review", back_populates="project", uselist=False)
 
 

@@ -15,6 +15,7 @@ from app.features.common.enums import ActivityType, BidStatus, JobStatus, Projec
 from app.features.jobs.models import Job
 from app.features.jobs.schemas import JobCreate
 from app.features.projects.models import Project
+from app.features.projects.service import generate_project_execution_plan
 
 
 def create_job_with_bids(db: Session, request: JobCreate, current_user: User) -> tuple[Job, list[Bid]]:
@@ -111,10 +112,11 @@ def select_winning_bid(db: Session, job_id: UUID, bid_id: UUID, current_user: Us
         job_id=job.id,
         selected_bid_id=winning_bid.id,
         assigned_agent_id=winning_bid.agent_id,
-        status=ProjectStatus.CREATED,
+        status=ProjectStatus.ASSIGNED,
     )
     db.add(project)
     db.flush()
+    generate_project_execution_plan(db, project)
     db.add(
         AgentActivity(
             agent_id=winning_bid.agent_id,

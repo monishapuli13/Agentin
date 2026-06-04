@@ -6,7 +6,14 @@ from openai import OpenAI
 
 from app.core.config import settings
 from app.features.agents.models import Agent
-from app.features.ai.schemas import GENERATED_BID_JSON_SCHEMA, GeneratedBid
+from app.features.ai.schemas import (
+    GENERATED_BID_JSON_SCHEMA,
+    GENERATED_EXECUTION_PLAN_JSON_SCHEMA,
+    GeneratedBid,
+    GeneratedExecutionPlan,
+    GeneratedExecutionStep,
+)
+from app.features.bids.models import Bid
 from app.features.jobs.models import Job
 
 
@@ -17,6 +24,20 @@ def generate_bid_with_ai(
 ) -> GeneratedBid:
     if not settings.openai_api_key:
         return generate_fallback_bid(agent, job, skill_match)
+
+
+def generate_execution_plan_with_ai(
+    agent: Agent,
+    job: Job,
+    bid: Bid,
+) -> GeneratedExecutionPlan:
+    if not settings.openai_api_key:
+        return generate_fallback_execution_plan(agent, job, bid)
+
+    try:
+        return _generate_openai_execution_plan(agent, job, bid)
+    except Exception:
+        return generate_fallback_execution_plan(agent, job, bid)
 
     try:
         return _generate_openai_bid(agent, job, skill_match)
@@ -85,6 +106,68 @@ def _generate_openai_bid(
     return _normalize_generated_bid(GeneratedBid.model_validate_json(output_text), job)
 
 
+def _generate_openai_execution_plan(
+    agent: Agent,
+    job: Job,
+    bid: Bid,
+) -> GeneratedExecutionPlan:
+    client = OpenAI(api_key=settings.openai_api_key)
+    response = client.responses.create(
+        model=settings.openai_model,
+        input=[
+            {
+                "role": "system",
+                "content": (
+                    "You are the winning autonomous AI agent on Agently. "
+                    "Generate a structured execution plan that is concrete, "
+                    "client-readable, and scoped to the selected job."
+                ),
+            },
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "agent": {
+                            "name": agent.name,
+                            "headline": agent.headline,
+                            "personality": agent.personality,
+                            "specialization": agent.specialization,
+                            "skills": agent.skills,
+                        },
+                        "job": {
+                            "title": job.title,
+                            "description": job.description,
+                            "budget_cents": job.budget_cents,
+                            "category": job.category,
+                            "required_skills": job.required_skills,
+                        },
+                        "winning_bid": {
+                            "amount_cents": bid.amount_cents,
+                            "estimated_hours": str(bid.estimated_hours),
+                            "proposal": bid.proposal,
+                            "reasoning": bid.reasoning,
+                        },
+                    }
+                ),
+            },
+        ],
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "agently_execution_plan",
+                "schema": GENERATED_EXECUTION_PLAN_JSON_SCHEMA,
+                "strict": True,
+            }
+        },
+    )
+
+    output_text = getattr(response, "output_text", None)
+    if not output_text:
+        raise ValueError("OpenAI response did not include output_text.")
+
+    return _normalize_execution_plan(GeneratedExecutionPlan.model_validate_json(output_text))
+
+
 def generate_fallback_bid(
     agent: Agent,
     job: Job,
@@ -121,6 +204,58 @@ def generate_fallback_bid(
     )
 
 
+def generate_fallback_execution_plan(
+    agent: Agent,
+    job: Job,
+    bid: Bid,
+) -> GeneratedExecutionPlan:
+    core_skills = job.required_skills[:3] or [agent.specialization]
+    scope = ", ".join(core_skills)
+    steps = [
+        GeneratedExecutionStep(
+            title="Clarify scope and acceptance criteria",
+            description=(
+                f"Review '{job.title}' and translate the client's request into "
+                "concrete implementation checkpoints."
+            ),
+            output="Scope, constraints, and acceptance criteria are documented.",
+        ),
+        GeneratedExecutionStep(
+            title="Produce the core solution",
+            description=(
+                f"Apply {agent.name}'s {agent.specialization} expertise to deliver "
+                f"the main work, with emphasis on {scope}."
+            ),
+            output="Core solution plan is completed and mapped to requested skills.",
+        ),
+        GeneratedExecutionStep(
+            title="Review and package the result",
+            description=(
+                "Validate the work against the bid proposal and prepare a concise "
+                "client-facing delivery summary."
+            ),
+            output="Final delivery summary is ready for client review.",
+        ),
+    ]
+
+    return GeneratedExecutionPlan(
+        execution_plan=(
+            f"{agent.name} will execute '{job.title}' in three focused phases: "
+            "scope clarification, core production, and final review."
+        ),
+        milestones=[
+            "Scope confirmed",
+            "Core solution planned",
+            "Review package prepared",
+        ],
+        deliverable_summary=(
+            f"A structured delivery package for '{job.title}', aligned to the "
+            f"winning bid of {bid.amount_cents} cents and ready for review."
+        ),
+        steps=steps,
+    )
+
+
 def _normalize_generated_bid(generated_bid: GeneratedBid, job: Job) -> GeneratedBid:
     generated_bid.amount_cents = max(5000, min(job.budget_cents, generated_bid.amount_cents))
     generated_bid.estimated_hours = round(max(1.0, generated_bid.estimated_hours), 2)
@@ -130,3 +265,10 @@ def _normalize_generated_bid(generated_bid: GeneratedBid, job: Job) -> Generated
     )
     return generated_bid
 
+
+def _normalize_execution_plan(plan: GeneratedExecutionPlan) -> GeneratedExecutionPlan:
+    if len(plan.steps) < 1:
+        raise ValueError("Execution plan must include at least one step.")
+    if len(plan.milestones) < 1:
+        raise ValueError("Execution plan must include at least one milestone.")
+    return plan
