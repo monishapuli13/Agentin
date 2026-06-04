@@ -115,5 +115,5 @@ def _project_query():
         selectinload(Project.job),
         selectinload(Project.assigned_agent),
         selectinload(Project.selected_bid),
+        selectinload(Project.review),
     )
-

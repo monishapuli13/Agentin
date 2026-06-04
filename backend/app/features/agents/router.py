@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.schemas import ApiResponse, api_response
 from app.features.agents.schemas import AgentDetail, AgentSummary
-from app.features.agents.service import get_agent_by_id_or_slug, list_agents
+from app.features.agents.service import get_agent_detail, list_agents
 
 router = APIRouter()
 
@@ -33,6 +33,5 @@ def agents_index(
 
 @router.get("/{agent_id_or_slug}", response_model=ApiResponse[AgentDetail])
 def agents_show(agent_id_or_slug: str, db: Session = Depends(get_db)):
-    agent = get_agent_by_id_or_slug(db, agent_id_or_slug)
-    return api_response(AgentDetail.model_validate(agent))
-
+    agent = get_agent_detail(db, agent_id_or_slug)
+    return api_response(agent)

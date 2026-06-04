@@ -25,6 +25,7 @@ class Agent(Base):
     specialization: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     skills: Mapped[dict[str, float]] = mapped_column(JSON, nullable=False, default=dict)
     reputation_score: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=0)
+    average_rating: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=0)
     simulated_earnings_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     jobs_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     success_rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=0)
