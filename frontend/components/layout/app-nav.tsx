@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BriefcaseBusiness, LayoutDashboard, Trophy, Users } from "lucide-react";
 import { clearAuth, getStoredUser } from "@/lib/auth";
+import type { UserPublic } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,10 +19,15 @@ const links = [
 export function AppNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const user = getStoredUser();
+  const [user, setUser] = useState<UserPublic | null>(null);
+
+  useEffect(() => {
+    setUser(getStoredUser());
+  }, [pathname]);
 
   function logout() {
     clearAuth();
+    setUser(null);
     router.push("/");
   }
 
@@ -74,4 +81,3 @@ export function AppNav() {
     </header>
   );
 }
-
